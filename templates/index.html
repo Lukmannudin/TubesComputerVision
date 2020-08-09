@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+            integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+            crossorigin="anonymous"></script>
+</head>
+
+<body>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+
+<style>
+        .video {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -100;
+            background-size: cover;
+            overflow: hidden;
+        }
+
+        .card-shadow {
+            box-shadow: -1px 5px 8px rgba(0, 0, 0, 0.17);
+        }
+
+</style>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-5 offset-1" style="margin-top: 20px;">
+            <div class="card card-shadow" style="padding-top: 10px;">
+                <div style="display: flex; margin-left: 20px;">
+                    <img src="icons/video.png" height="40px" width="40px">
+                    <span
+                            style="font-size: 18px;color: #D5612B;font-weight: 600; margin-top: 8px; margin-left: 5px;">Video
+                            Resource</span>
+                </div>
+                <video style="margin-top: 10px;" id="video" width="100%" autoplay></video>
+                <div class="card-body">
+                    <div style="width: 100px; height: 50px; text-align: center; margin: 0 auto;">
+                        <img src="icons/camera.png" height="50px" width="50px" id="snap">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-5" style="margin-top: 20px;">
+            <div class="card card-shadow" style="padding-top: 10px;">
+                <div style="display: flex; margin-left: 20px;">
+                    <img src="icons/video.png" height="40px" width="40px">
+                    <span style="font-size: 18px;color: #D5612B;font-weight: 600; margin-top: 8px; margin-left: 5px;">Deteksi
+                            Masker</span>
+                </div>
+
+                <div class="card-body" style="padding-left: 0; padding-right: 0; margin-top: -10px;">
+                    <div class="alert" role="alert" id="resultImage" style="display:none; margin: 5px"></div>
+                    <form action="/upload-image" method="POST" enctype="multipart/form-data" id="form">
+                        <input type="file" name="image" id="image" onchange="submitEvent()" class="btn">
+                    </form>
+                    <canvas id="canvas" width="601" height="410"></canvas>
+                </div>
+                <div style="margin-left: 20px;">
+                    <img src="icons/arrowup.png" style="height: 50px; width: 30px;"/>
+                    <p style="color: #5C718B;">
+                        Right click on the image above and choose <b>Save Image As...</b>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+        function submitEvent() {
+            document.getElementById("form").submit();
+        }
+
+</script>
+
+<script>
+        var button = document.getElementById('btn-download');
+        // Grab elements, create settings, etc.
+        var video = document.getElementById('video');
+
+        // Elements for taking the snapshot
+        var canvas = document.getElementById('canvas');
+
+        var context = canvas.getContext('2d');
+        // Get access to the camera!
+        context.font = "16px Arial";
+        context.fillText("Belum ada gambar yang dideteksi", (canvas.width / 2) - 110, (canvas.height / 2) + 8);
+
+        //create canvas image
+
+
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            // Not adding `{ audio: true }` since we only want video now
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
+                //video.src = window.URL.createObjectURL(stream);
+                video.srcObject = stream;
+                video.play();
+            });
+        }
+
+        else if (navigator.getUserMedia) { // Standard
+            navigator.getUserMedia({ video: true }, function (stream) {
+                video.src = stream;
+                video.play();
+            }, errBack);
+
+        } else if (navigator.webkitGetUserMedia) { // WebKit-prefixed
+            navigator.webkitGetUserMedia({ video: true }, function (stream) {
+                video.src = window.webkitURL.createObjectURL(stream);
+                video.play();
+            }, errBack);
+
+        } else if (navigator.mozGetUserMedia) { // Mozilla-prefixed
+            navigator.mozGetUserMedia({ video: true }, function (stream) {
+                video.srcObject = stream;
+                video.play();
+            }, errBack);
+        }
+
+        // Trigger photo take
+        document.getElementById("snap").addEventListener("click", function () {
+            context.drawImage(video, 0, 0, 640, 480);
+            var dataURL = canvas.toDataURL('image/png');
+            button.href = dataURL;
+        });
+
+    var imageTag = document.getElementById("image");
+    var resultImageTag = document.getElementById("resultImage");
+
+    {% if result %}
+      imageTag.style.display = "none";
+      resultImageTag.style.display = "block";
+      resultImageTag.style.margin = "5px";
+      {% if result == "Masker" %}
+            resultImageTag.classList.add("alert-success");
+            resultImageTag.appendChild(document.createTextNode("Anda Memakai Masker"));
+      {% else %}
+            resultImageTag.classList.add("alert-danger");
+            resultImageTag.appendChild(document.createTextNode("Anda Tidak Memakai Masker"));
+      {% endif %}
+
+    {% endif %}
+
+</script>
+</body>
+
+</html>
